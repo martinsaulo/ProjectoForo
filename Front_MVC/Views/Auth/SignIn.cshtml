@@ -1,0 +1,36 @@
+﻿@{
+    ViewData["Title"] = "Inicio sesión";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+        <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+        </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+        <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+        </div>
+}
+
+<div class="container">
+
+    <h1>Inicio sesión</h1>
+
+    <form asp-controller="Auth" asp-action="LogIn" class="form-control">
+
+        <label class="form-label">Email:</label>
+        <input class="form-control" type="email" name="email" required><br />
+
+        <label class="form-label">Contraseña:</label>
+        <input class="form-control" type="password" name="password" required /><br />
+
+        <button class="btn btn-primary" type="submit">Iniciar sesión</button>
+
+    </form>
+
+</div>
+

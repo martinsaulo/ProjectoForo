@@ -1,0 +1,66 @@
+﻿
+@{
+    int? authorId = Context.Session.GetInt32("SESSION");
+
+    string? isEdit = Context.Request.Query["edit"];
+    string? postId = Context.Request.Query["postId"];
+
+    if (isEdit == "true")
+    {
+        ViewData["Title"] = "Editar Post";
+    }
+    else
+    {
+        ViewData["Title"] = "Nuevo Post";
+    }
+}
+
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="container">
+    @if (isEdit == "true")
+    {
+        <h1>Editar Posteo</h1>
+    }
+    else
+    {
+        <h1>Nuevo Posteo</h1>
+    }
+    
+
+    <form class="form-control container">
+        <label class="form-label" >Titulo:</label>
+        <input class="form-control" type="text" name="title" placeholder="Escriba el título de su posteo aqui..."/><br />
+
+        <label class="form-label" >Descripción:</label><br />
+        <textarea class="form-control" rows="12" name="content" placeholder="Escriba la descipción de su posteo aqui..."></textarea><br />
+
+        <input type="hidden" name="authorId" value=@authorId />
+
+        @if(isEdit == "true")
+        {
+            <input type="hidden" name="postId" value=@postId />
+        }
+
+        <div class="my-2 mx-1 justify-content-end">
+            <button class="btn btn-danger" asp-controller="Home" asp-action="Index">Cancelar</button>
+
+            @if (isEdit == "true")
+            {
+                <button class="btn btn-success" asp-controller="Home" asp-action="EditPost">Editar</button>
+            }
+            else
+            {
+                <button class="btn btn-success" asp-controller="Home" asp-action="CreatePost">Publicar</button>
+            }
+            
+        </div>
+    </form>
+
+</div>

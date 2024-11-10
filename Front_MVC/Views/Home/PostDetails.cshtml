@@ -1,0 +1,186 @@
+﻿@model PostDto
+@{
+    ViewData["Title"] = Model.Title;
+    ViewBag.PostAuthorId = Model.Author.Id;
+    ViewBag.PostId = Model.Id;
+
+    bool isPostAuthor = false, isPinCommentAuthor = false;
+
+    int? id = Context.Session.GetInt32("SESSION");
+
+
+    if (id != null)
+    {
+        if (id == Model.Author.Id) isPostAuthor = true;
+
+        if (Model.PinComment != null)
+        {
+            if (id == Model.PinComment.Author.Id) isPinCommentAuthor = true;
+        } 
+
+    }
+
+    var editPost = new Dictionary<string, string> { { "edit", "true" }, { "postId", Model.Id.ToString() } };
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="container mt-5">
+
+    <!-- Sección del post principal -->
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h2 class="card-title">@Model.Title</h2>
+            <p class="card-subtitle text-primary">@Model.Author.Nickname</p>
+            <p class="card-text">@Model.Description</p>
+            <div class="d-flex justify-content-between">
+
+                <div>
+                    <span class="text-success">Likes: @Model.LikeCount</span>
+
+                    <a class="btn btn-sm btn-success" asp-controller="Home" asp-action="LikeComment"
+                    asp-route-commentId=@Model.Id
+                    asp-route-postId=@Model.Id
+                    asp-route-userId=@id
+                    asp-route-isDislike="false">
+                        <i class="nf nf-fa-heard_o"></i>
+                    </a>
+
+                    <a class="btn btn-sm btn-danger" asp-controller="Home" asp-action="LikeComment"
+                    asp-route-commentId=@Model.Id
+                    asp-route-postId=@Model.Id
+                    asp-route-userId=@id
+                    asp-route-isDislike="true">
+                        <i class="nf nf-md-heart_broken">
+                        </i>
+                    </a>
+
+
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#replyModal" onclick="ReplyComment('@Model.Id')">
+
+                        <i class="nf nf-md-comment_text_outline"></i>
+                    </button>
+                    
+                    @if (isPostAuthor)
+                    {
+                        <a class="btn btn-sm btn-info" asp-controller="Home" asp-action="NewPost" asp-all-route-data="editPost">
+                            <i class="nf nf-fa-pen_to_square text-white"></i>
+                        </a>
+
+                        <a class="btn btn-sm btn-danger" asp-controller="Home" asp-action="DeletePost"
+                        asp-route-postId=@Model.Id
+                        asp-route-postDeleteId=@Model.Id
+                        asp-route-userId=@id>
+                            <i class="nf nf-fa-trash_can"></i>
+                        </a>
+                    }
+
+
+                </div>
+
+                @if (Model.isEdited)
+                {
+                    <span class="text-danger">(Editado)</span>
+                }
+                <span class="text-muted">Publicado: @Model.CreateAt.ToString("dd/MM/yyyy HH:mm")</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comentario pinneado-->
+
+    @if (Model.PinComment != null)
+    {
+        <h3>Comentario fijado</h3>
+        <div class="card mb-4 container">
+            <div class="card-body mr-2">
+                <h5 class="card-title text-primary">@Model.PinComment.Author.Nickname</h5>
+                <p class="card-text">@Model.PinComment.Description</p>
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <span class="text-success">Likes: @Model.PinComment.LikeCount</span>
+
+                        <a class="btn btn-sm btn-success" asp-controller="Home" asp-action="LikeComment"
+                        asp-route-commentId=@Model.PinComment.Id
+                        asp-route-postId=@Model.Id
+                        asp-route-userId=@id
+                        asp-route-isDislike="false">
+                            <i class="nf nf-fa-heard_o"></i>
+                        </a>
+
+                        <a class="btn btn-sm btn-danger" asp-controller="Home" asp-action="LikeComment"
+                        asp-route-commentId=@Model.PinComment.Id
+                        asp-route-postId=@Model.Id
+                        asp-route-userId=@id
+                        asp-route-isDislike="true">
+                            <i class="nf nf-md-heart_broken">
+                            </i>
+                        </a>
+
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#replyModal" onclick="ReplyComment('@Model.PinComment.Id')">
+                            <i class="nf nf-md-comment_text_outline"></i>
+                        </button>
+
+                        @if (isPinCommentAuthor)
+                        {
+                            <a class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editModal" onclick="EditComment('@Model.PinComment.Id')">
+                                <i class="nf nf-fa-pen_to_square text-white"></i>
+                            </a>
+
+                            <a class="btn btn-sm btn-danger" asp-controller="Home" asp-action="DeleteComment"
+                            asp-route-commentId=@Model.PinComment.Id
+                            asp-route-postId=@Model.Id
+                            asp-route-userId=@id>
+                                <i class="nf nf-fa-trash_can"></i>
+                            </a>
+                        }
+
+
+                    </div>
+                    @if (Model.PinComment.isEdited)
+                    {
+                        <span class="text-danger">(Editado)</span>
+                    }
+                    <span class="text-muted">Publicado: @Model.PinComment.CreateAt.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Sección de respuestas -->
+    <h3>Respuestas</h3>
+
+    <div class="mt-3">
+        @if (Model.Replies != null && Model.Replies.Any())
+        {
+            
+            @foreach (var reply in Model.Replies)
+            {
+                <!-- Renderizar respuestas recursivamente -->
+                if (reply.isDeleted)
+                {
+                    @await Html.PartialAsync("_DeletedComment", reply)
+                }
+                else
+                {
+                    @await Html.PartialAsync("_Comment", reply)
+                }
+            }
+            
+        }
+        else
+        {
+            <p class="text-muted">Aún no hay respuestas para este post.</p>
+        }
+    </div>
+</div>
+
+@await Html.PartialAsync("_Reply", Model.Id)
+
+@await Html.PartialAsync("_EditReply", Model.Id)

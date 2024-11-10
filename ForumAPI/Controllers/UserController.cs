@@ -1,4 +1,6 @@
-using ForumModel;
+using ForumModel.Context;
+using ForumModel.Entities;
+using ForumModel.Repositories.Contracts;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ForumAPI.Controllers
@@ -7,67 +9,82 @@ namespace ForumAPI.Controllers
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        [HttpPost()]
-        public ActionResult RegisterNewUser(string nickname, string email, string password)
+        private IUserRepository _userRepository;
+        public UserController(IUserRepository userRepository)
         {
+            _userRepository = userRepository;
+        }
+        [HttpPost()]
+        public IActionResult RegisterNewUser(string nickname, string email, string password)
+        {
+            if (password.Length < 8 || password.Length > 32 || !password.Any(char.IsDigit))
+            {
+                return ValidationProblem("Formato de contraseña invalido.");
+            }
+
+            if (_userRepository.CheckNickname(nickname))
+            {
+                return ValidationProblem("Nombre de usuario ya en uso.");
+            }
+
+            if (_userRepository.CheckEmail(email))
+            {
+                return ValidationProblem("Email ya en uso.");
+            }
+
             try
             {
-                ForumUser.isValidNickname(nickname);
-                ForumUser.isValidEmail(email);
-                ForumUser.isValidPassword(password);
-                
-                using (ApplicationDbContext db = new ApplicationDbContext())
-                {
-                    ForumUser newUser = new ForumUser(nickname, email, password);
-                    db.Users.Add(newUser);
-                    db.SaveChanges();
-                    return Ok();
-                }
-            }
-            catch (Exception ex) 
+                ForumUser user = new ForumUser(nickname, email, password);
+
+                _userRepository.Create(user);
+                _userRepository.Save();
+                return Ok();
+
+            } catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(ex);
             }
+
         }
         [HttpDelete()]
-        public ActionResult DeleteUser(int userId)
+        public async Task<IActionResult> DeleteUser(int userId)
         {
-            using (ApplicationDbContext db = new ApplicationDbContext())
-            {
-                var user = db.Users.Find(userId);
 
-                if(user == null)
-                {
-                    return NotFound("El usuario no existe.");
-                }
-                else
-                {
-                    db.Users.Remove(user);
-                    db.SaveChanges();
-
-                    return Ok();
-                }
-            }
-        }
-        [HttpGet()]
-        public ActionResult isValidLogIn(string email, string password)
-        {
-            ForumUser? user;
-            using (ApplicationDbContext db = new ApplicationDbContext())
-            {
-                user = db.Users.FirstOrDefault(x => x.Email == email);
-            }
+            var user = await _userRepository.GetByIdAsync(userId);
 
             if (user == null)
             {
-                return NotFound("Email no registrado");
-            }
-            if (user.Password != password)
-            {
-                return BadRequest("Contraseña incorrecta.");
+                return BadRequest("El usuario no existe.");
             }
 
-            return Ok(user.UserId);
+            try
+            {
+                _userRepository.Delete(user);
+                await _userRepository.SaveAsync();
+
+                return Ok();
+
+            } catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+
+        }
+
+        [HttpGet]
+        public IActionResult isValidLogIn(string email, string password)
+        {
+
+            int userId = _userRepository.CheckLogIn(email, password);
+
+            if (userId != -1)
+            {
+                return Ok(userId);
+            }
+            else
+            {
+                return BadRequest();
+            }
         }
     }
 }

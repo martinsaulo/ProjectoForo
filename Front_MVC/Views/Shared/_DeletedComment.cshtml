@@ -1,0 +1,33 @@
+﻿@model CommentDto
+
+@{
+}
+
+<div class="card mb-2 container">
+    <div class="card-body mr-2">
+        <h5 class="card-title text-primary">(Eliminado)</h5>
+        <p class="card-text">Este comentario ha sido eliminado ...</p>
+
+    </div>
+
+    @if (Model.Replies != null && Model.Replies.Any())
+    {
+        <ul class="list-group ms-4">
+
+            @foreach (var reply in Model.Replies)
+            {
+                <!-- Renderizar respuestas recursivamente -->
+                if (reply.isDeleted)
+                {
+                    @await Html.PartialAsync("_DeletedComment", reply)
+                }
+                else
+                {
+                    @await Html.PartialAsync("_Comment", reply)
+                }
+
+            }
+
+        </ul>
+    }
+</div>

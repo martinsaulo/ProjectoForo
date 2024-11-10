@@ -1,0 +1,40 @@
+﻿@model int
+
+@{
+    int? userId = Context.Session.GetInt32("SESSION");
+}
+
+<div class="modal fade" id="editModal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+
+            <div class="modal-header">
+                <h5 class="modal-title">Editar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form>
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <textarea class="form-control" name="content" rows="6" placeholder="Escribe tu respuesta aquí..."></textarea>
+                        <input type="hidden" name="userId" value=@userId>
+                        <input type="hidden" name="postId" value=@Model>
+                        <input type="hidden" name="commentId" id="commentIdEdit">
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+                    <button class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-success" asp-controller="Home" asp-action="EditComment">
+                        Enviar
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>

@@ -12,3 +12,4 @@ C:\Users\Usuario\source\repos\ForumProject\ForumModel\obj\Debug\net8.0\refint\Fo
 C:\Users\Usuario\source\repos\ForumProject\ForumModel\obj\Debug\net8.0\ForumModel.pdb
 C:\Users\Usuario\source\repos\ForumProject\ForumModel\obj\Debug\net8.0\ForumModel.genruntimeconfig.cache
 C:\Users\Usuario\source\repos\ForumProject\ForumModel\obj\Debug\net8.0\ref\ForumModel.dll
+C:\Users\Usuario\source\repos\ForumProject\ForumModel\obj\Debug\net8.0\ForumModel.sourcelink.json
